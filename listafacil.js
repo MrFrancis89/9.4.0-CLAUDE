@@ -350,24 +350,50 @@ export function iniciarListaFacil() {
         function getX(e) { return e.touches ? e.touches[0].clientX : e.clientX; }
         function getY(e) { return e.touches ? e.touches[0].clientY : e.clientY; }
 
+        // CORREÇÃO: flag isScrolling — uma vez que o gesto é vertical, nunca vira swipe
+        let isScrolling = false;
+        // Limiar mínimo antes de classificar o gesto (evita jitter)
+        const DIRECTION_THRESHOLD = 8;
+        // Limiar horizontal mínimo para considerar swipe real
+        const SWIPE_THRESHOLD = 20;
+
         rows.forEach(row => {
             row.addEventListener('touchstart', e => {
                 const el = e.target;
                 if (el.tagName === 'INPUT') return;
                 if (swipedRow && swipedRow !== row) fecharSwipe(swipedRow);
-                swipeStartX = getX(e);
-                swipeStartY = getY(e);
-                isSwiping = false;
-                swipeCurrentX = swipedRow === row ? -SWIPE_WIDTH : 0;
+                swipeStartX    = getX(e);
+                swipeStartY    = getY(e);
+                isSwiping      = false;
+                isScrolling    = false;          // reset a cada toque
+                swipeCurrentX  = swipedRow === row ? -SWIPE_WIDTH : 0;
                 row.style.transition = 'none';
             }, { passive: true });
 
             row.addEventListener('touchmove', e => {
                 const dx = getX(e) - swipeStartX;
                 const dy = getY(e) - swipeStartY;
-                if (!isSwiping && Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy)) isSwiping = true;
+                const absDx = Math.abs(dx);
+                const absDy = Math.abs(dy);
+
+                // Aguarda até ter movimento suficiente para classificar o gesto
+                if (!isSwiping && !isScrolling) {
+                    if (absDx < DIRECTION_THRESHOLD && absDy < DIRECTION_THRESHOLD) return;
+                    if (absDy >= absDx) {
+                        // Gesto predominantemente vertical → scroll normal, nunca vira swipe
+                        isScrolling = true;
+                        return;
+                    }
+                    // Gesto predominantemente horizontal E acima do limiar de swipe
+                    if (absDx >= SWIPE_THRESHOLD) {
+                        isSwiping = true;
+                    }
+                }
+
+                if (isScrolling) return;   // scroll detectado: ignora completamente
+
                 if (isSwiping) {
-                    if (e.cancelable) e.preventDefault();
+                    if (e.cancelable) e.preventDefault();  // bloqueia scroll só quando é swipe
                     if (document.activeElement) document.activeElement.blur();
                     swipeBg.style.display = 'flex';
                     swipeBg.style.top    = row.offsetTop + 'px';
@@ -381,7 +407,6 @@ export function iniciarListaFacil() {
                 if (!isSwiping) return;
                 const dx = (e.changedTouches ? e.changedTouches[0].clientX : e.clientX) - swipeStartX;
                 const fin = swipeCurrentX + dx;
-                // Spring physics via CSS class
                 row.classList.add('swipe-spring');
                 row.style.transition = 'transform 0.38s cubic-bezier(0.175,0.885,0.32,1.275)';
                 if (fin < -36) {
