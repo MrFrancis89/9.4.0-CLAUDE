@@ -125,8 +125,8 @@ export function iniciarListaFacil() {
     }
 
     function atualizarTotalLinha(tr, item) {
-        const td = tr.querySelector('.lf-total-cell');
-        if (td) td.innerText = fmtM(item.preco * item.qtd);
+        const el = tr.querySelector('.lf-total-cell');
+        if (el) el.textContent = fmtM(item.preco * item.qtd);
     }
 
     // ===== GAUGE CIRCULAR SVG =====
@@ -230,94 +230,111 @@ export function iniciarListaFacil() {
         ordenar();
         itens.forEach((item, rowIdx) => {
             const tr = document.createElement('tr');
+            tr.className = 'lf-item-row';
             tr.dataset.lfId = item.lfId;
             tr.style.animationDelay = `${rowIdx * 28}ms`;
 
-            // ── Nome
-            const tdNome = document.createElement('td');
-            tdNome.className = 'lf-col-prod';
+            // ── Célula única (card layout)
+            const td = document.createElement('td');
+            td.className = 'lf-item-cell';
+
+            // Wrapper card
+            const card = document.createElement('div');
+            card.className = 'lf-item-card';
+
+            // ── Nome (linha superior, largura total)
             const nomeInput = document.createElement('input');
             nomeInput.type = 'text';
             nomeInput.className = 'lf-nome-editavel';
             nomeInput.value = item.nome;
-            nomeInput.setAttribute('autocomplete','off');
-            nomeInput.setAttribute('autocorrect','off');
-            nomeInput.setAttribute('spellcheck','false');
-            nomeInput.addEventListener('focus', function() {
-                darFeedback();
-                fixarViewport(this);
-            });
+            nomeInput.setAttribute('autocomplete', 'off');
+            nomeInput.setAttribute('autocorrect', 'off');
+            nomeInput.setAttribute('spellcheck', 'false');
+            nomeInput.addEventListener('focus', function() { darFeedback(); fixarViewport(this); });
             nomeInput.addEventListener('blur', function() {
                 const v = this.value.trim();
                 if (!v) { this.value = item.nome; return; }
                 if (v !== item.nome) { item.nome = v; salvar(); renderizar(); }
             });
             nomeInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); nomeInput.blur(); } });
-            tdNome.appendChild(nomeInput);
+            card.appendChild(nomeInput);
 
-            // ── Preço + sparkline
-            const tdPreco = document.createElement('td');
-            tdPreco.className = 'lf-col-preco';
-            const sparkWrap = criarSparkline(item.nome, item.preco);
+            // ── Controles (linha inferior: Preço | Qtd | Total)
+            const footer = document.createElement('div');
+            footer.className = 'lf-item-footer';
 
+            // Campo Preço
+            const fieldPreco = document.createElement('div');
+            fieldPreco.className = 'lf-item-field lf-field-preco';
+            const labelPreco = document.createElement('span');
+            labelPreco.className = 'lf-field-label';
+            labelPreco.textContent = 'Preço unit.';
             const inputPreco = document.createElement('input');
             inputPreco.type = 'text';
-            inputPreco.value = item.preco > 0 ? item.preco.toFixed(2).replace('.', ',') : '0,00';
+            inputPreco.value = item.preco > 0 ? fmtInput(item.preco) : '0,00';
             inputPreco.className = 'lf-preco-input';
             inputPreco.readOnly = true;
             inputPreco.setAttribute('aria-label', 'Preço — toque para editar');
             inputPreco.addEventListener('click', function() {
                 darFeedback();
                 currentPrecoInput = this;
-                calcExpression = this.value.replace(/\./g,'').replace(',','.') || '0';
+                calcExpression = this.value.replace(/\./g, '').replace(',', '.') || '0';
                 calcDisplay.innerText = calcExpression.replace('.', ',');
                 calcTitle.innerText = `🧮 ${item.nome}`;
                 calcModal.style.display = 'flex';
             });
-            tdPreco.appendChild(inputPreco);
-            if (sparkWrap) tdPreco.appendChild(sparkWrap);
+            const sparkWrap = criarSparkline(item.nome, item.preco);
+            fieldPreco.appendChild(labelPreco);
+            fieldPreco.appendChild(inputPreco);
+            if (sparkWrap) fieldPreco.appendChild(sparkWrap);
 
-            // ── Quantidade
-            const tdQtd = document.createElement('td');
-            tdQtd.className = 'lf-col-qtd';
+            // Campo Qtd
+            const fieldQtd = document.createElement('div');
+            fieldQtd.className = 'lf-item-field lf-field-qtd';
+            const labelQtd = document.createElement('span');
+            labelQtd.className = 'lf-field-label';
+            labelQtd.textContent = 'Qtd';
             const inputQtd = document.createElement('input');
             inputQtd.type = 'text';
-            inputQtd.inputMode = 'numeric';   // teclado numérico iOS
-            inputQtd.pattern = '[0-9]*';       // iOS numeric pad
-            inputQtd.value = fmtQtd(item.qtd); // inteiro limpo: '0','1','4'...
+            inputQtd.inputMode = 'numeric';
+            inputQtd.pattern = '[0-9]*';
+            inputQtd.value = fmtQtd(item.qtd);
             inputQtd.className = 'lf-qtd-input';
             inputQtd.setAttribute('aria-label', 'Quantidade');
             inputQtd.addEventListener('focus', function() {
-                darFeedback();
-                fixarViewport(this);
-                // Seleciona tudo ao focar para fácil substituição
+                darFeedback(); fixarViewport(this);
                 setTimeout(() => this.select(), 10);
             });
             inputQtd.addEventListener('input', function() {
-                // Aceita apenas inteiros e decimais com vírgula
-                let raw = this.value.replace(',', '.');
-                let v = parseFloat(raw);
+                let v = parseFloat(this.value.replace(',', '.'));
                 if (isNaN(v) || v < 0) v = 0;
                 item.qtd = v;
                 salvar();
                 atualizarTotalLinha(tr, item);
                 atualizarTotais();
             });
-            inputQtd.addEventListener('blur', function() {
-                // Força display limpo: inteiro sem decimal
-                this.value = fmtQtd(item.qtd);
-            });
-            tdQtd.appendChild(inputQtd);
+            inputQtd.addEventListener('blur', function() { this.value = fmtQtd(item.qtd); });
+            fieldQtd.appendChild(labelQtd);
+            fieldQtd.appendChild(inputQtd);
 
-            // ── Total
-            const tdTotal = document.createElement('td');
-            tdTotal.className = 'lf-col-total lf-total-cell';
-            tdTotal.innerText = fmtM(item.preco * item.qtd);
+            // Campo Total
+            const fieldTotal = document.createElement('div');
+            fieldTotal.className = 'lf-item-field lf-field-total';
+            const labelTotal = document.createElement('span');
+            labelTotal.className = 'lf-field-label';
+            labelTotal.textContent = 'Total';
+            const spanTotal = document.createElement('span');
+            spanTotal.className = 'lf-total-cell';
+            spanTotal.textContent = fmtM(item.preco * item.qtd);
+            fieldTotal.appendChild(labelTotal);
+            fieldTotal.appendChild(spanTotal);
 
-            tr.appendChild(tdNome);
-            tr.appendChild(tdPreco);
-            tr.appendChild(tdQtd);
-            tr.appendChild(tdTotal);
+            footer.appendChild(fieldPreco);
+            footer.appendChild(fieldQtd);
+            footer.appendChild(fieldTotal);
+            card.appendChild(footer);
+            td.appendChild(card);
+            tr.appendChild(td);
             tbody.appendChild(tr);
         });
 
@@ -345,7 +362,7 @@ export function iniciarListaFacil() {
     // ===== SWIPE (spring physics) =====
     function iniciarSwipe() {
         swipeBg.innerHTML = `<button class="lf-swipe-btn">🗑 Apagar</button>`;
-        const rows = document.querySelectorAll('#lf-tableBody tr');
+        const rows = document.querySelectorAll('#lf-tableBody tr.lf-item-row');
 
         function getX(e) { return e.touches ? e.touches[0].clientX : e.clientX; }
         function getY(e) { return e.touches ? e.touches[0].clientY : e.clientY; }
@@ -360,7 +377,8 @@ export function iniciarListaFacil() {
         rows.forEach(row => {
             row.addEventListener('touchstart', e => {
                 const el = e.target;
-                if (el.tagName === 'INPUT') return;
+                // Não inicia swipe se o toque foi em um campo de texto
+                if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') return;
                 if (swipedRow && swipedRow !== row) fecharSwipe(swipedRow);
                 swipeStartX    = getX(e);
                 swipeStartY    = getY(e);
