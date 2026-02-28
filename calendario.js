@@ -184,9 +184,13 @@ function renderCalendario() {
             if (!snap) return;
             darFeedback();
 
+            // Fecha o popup do calendário ANTES de abrir o modal de confirmação
+            // para evitar sobreposição visual entre os dois.
+            fecharCalendario();
+
             // Resumo do que será restaurado
-            const nEst = Array.isArray(snap.estoque) ? snap.estoque.length : 0;
-            const nLF  = Array.isArray(snap.lfItens) ? snap.lfItens.length : 0;
+            const nEst  = Array.isArray(snap.estoque) ? snap.estoque.length : 0;
+            const nLF   = Array.isArray(snap.lfItens) ? snap.lfItens.length : 0;
             const nComp = Array.isArray(snap.estoque) ? snap.estoque.filter(i => i.c).length : 0;
             mostrarConfirmacao(
                 `Restaurar backup de ${data}?\n\n` +
@@ -195,7 +199,6 @@ function renderCalendario() {
                 `🛍 ${nLF} na Lista Fácil`,
                 () => {
                     if (callbackRestaurar) callbackRestaurar(snap, data);
-                    fecharCalendario();
                 }
             );
         });
@@ -204,4 +207,4 @@ function renderCalendario() {
 
 function fmt(d) {
     return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
-}
+    }
