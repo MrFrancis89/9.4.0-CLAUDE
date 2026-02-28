@@ -1259,10 +1259,9 @@ body.theme-arctic .lf-produto-card, body.light-mode .lf-produto-card { backgroun
 /* ============================================================================
    TABELA LISTA FÁCIL
    ============================================================================ */
+/* ── Lista Fácil: wrapper da tabela ────────────────────────────────────────── */
 #listafacil-section .lf-table-wrapper {
   position: relative;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
@@ -1270,73 +1269,172 @@ body.theme-arctic .lf-produto-card, body.light-mode .lf-produto-card { backgroun
   -webkit-backdrop-filter: blur(var(--glass-blur));
   box-shadow: var(--glass-shadow), var(--inner-glow);
   margin-bottom: 12px;
+  overflow: hidden; /* sem scroll horizontal — card ocupa 100% */
 }
-#lf-comprasTable { width: 100%; min-width: 320px; border-collapse: collapse; table-layout: fixed; }
-#lf-comprasTable th {
-  background: rgba(255,255,255,0.04) !important;
-  backdrop-filter: blur(8px);
-  color: var(--text-soft);
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.9px;
-  padding: 11px 3px;
+
+/* Tabela sem layout fixo, sem cabeçalho, sem colunas */
+#lf-comprasTable {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+/* Linha = card completo */
+#lf-comprasTable tbody tr.lf-item-row {
+  display: block;
   border-bottom: 1px solid var(--glass-border);
-  white-space: nowrap;
-  text-align: center;
-  overflow: hidden;
+  transition: background 0.12s;
+  will-change: transform; /* suaviza o swipe */
 }
-body.theme-arctic #lf-comprasTable th, body.light-mode #lf-comprasTable th { background: rgba(0,0,0,0.04) !important; }
-#lf-comprasTable td { padding: 6px 3px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; background: transparent; overflow: hidden; }
-body.theme-arctic #lf-comprasTable td, body.light-mode #lf-comprasTable td { border-bottom-color: rgba(0,0,0,0.04); }
-.lf-col-prod  { width: 40%; }
-.lf-col-preco { width: 26%; }
-.lf-col-qtd   { width: 14%; }
-.lf-col-total { width: 20%; }
+#lf-comprasTable tbody tr.lf-item-row:last-child { border-bottom: none; }
+#lf-comprasTable tbody tr.lf-item-row:active { background: var(--accent-glow); }
+
+/* Célula única que ocupa a linha inteira */
+.lf-item-cell {
+  display: block;
+  width: 100%;
+  padding: 0;
+  overflow: hidden; /* contém o swipe */
+}
+
+/* Card interno: nome + controles */
+.lf-item-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 10px 12px 10px;
+  box-sizing: border-box;
+}
+
+/* ── Nome (input full-width) ─────────────────────────────────────────────── */
 .lf-nome-editavel {
-  display: block; width: 100%; box-sizing: border-box;
-  background: transparent; border: 1.5px solid transparent; border-radius: 8px;
-  padding: 8px 7px; font-size: 13px; font-weight: 400; color: var(--text);
-  outline: none; font-family: inherit;
-  /* CORREÇÃO: permite quebra de linha em nomes longos */
-  white-space: normal; overflow: visible; word-break: break-word; overflow-wrap: break-word;
-  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  padding: 0 0 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  outline: none;
+  font-family: inherit;
+  white-space: normal;
+  overflow: visible;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  margin-bottom: 10px;
+  transition: border-color 0.2s;
 }
 .lf-nome-editavel:focus {
-  border-color: var(--accent-primary); background: var(--surface-3);
+  border-bottom-color: var(--accent-primary);
+}
+
+/* ── Linha de controles: Preço | Qtd | Total ─────────────────────────────── */
+.lf-item-footer {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* Campo genérico (preço, qtd, total) */
+.lf-item-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.lf-field-preco { flex: 2; min-width: 80px; }
+.lf-field-qtd   { flex: 1; min-width: 52px; max-width: 80px; }
+.lf-field-total { flex: 1.5; min-width: 72px; align-items: flex-end; }
+
+/* Label acima do campo */
+.lf-field-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ── Input de Preço ──────────────────────────────────────────────────────── */
+.lf-preco-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  outline: none;
+  text-align: right;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  font-family: inherit;
+  white-space: nowrap;
+  -webkit-user-select: none;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+body.theme-arctic .lf-preco-input,
+body.light-mode   .lf-preco-input { background: var(--surface-2); }
+.lf-preco-input:active {
+  background: var(--accent-glow);
+  border-color: var(--accent-primary);
+  box-shadow: var(--inner-glow-active);
+}
+
+/* ── Input de Quantidade ─────────────────────────────────────────────────── */
+.lf-qtd-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 8px 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  outline: none;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-family: inherit;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+body.theme-arctic .lf-qtd-input,
+body.light-mode   .lf-qtd-input { background: var(--surface-2); }
+.lf-qtd-input:focus {
+  border-color: var(--accent-primary);
+  background: var(--surface-3);
   box-shadow: 0 0 0 3px var(--accent-glow);
 }
-.lf-preco-input {
-  display: block; width: 100%; box-sizing: border-box;
-  background: rgba(255,255,255,0.05); border: 1.5px solid transparent; border-radius: 8px;
-  padding: 8px 5px; font-size: 12px; color: var(--text); outline: none;
-  text-align: right; cursor: pointer; font-variant-numeric: tabular-nums;
-  font-family: inherit; transition: background 0.15s, box-shadow 0.15s; -webkit-user-select: none;
-}
-body.theme-arctic .lf-preco-input, body.light-mode .lf-preco-input { background: rgba(0,0,0,0.04); }
-.lf-preco-input:active { background: var(--accent-glow); box-shadow: var(--inner-glow-active); }
-.lf-qtd-input {
-  display: block; width: 100%; box-sizing: border-box;
-  background: rgba(255,255,255,0.05); border: 1.5px solid transparent; border-radius: 8px;
-  padding: 8px 2px; font-size: 13px; font-weight: 700; color: var(--text);
-  outline: none; text-align: center; font-variant-numeric: tabular-nums;
-  font-family: inherit; transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
-}
-body.theme-arctic .lf-qtd-input, body.light-mode .lf-qtd-input { background: rgba(0,0,0,0.04); }
-.lf-qtd-input:focus { border-color: var(--accent-primary); background: var(--surface-3); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+/* ── Coluna Total ────────────────────────────────────────────────────────── */
 .lf-total-cell {
-  font-weight: 700; color: var(--accent-primary); text-align: right;
-  padding-right: 7px; font-size: 12px; font-variant-numeric: tabular-nums;
-  white-space: nowrap; overflow: hidden; text-overflow: clip;
+  display: block;
+  font-weight: 700;
+  color: var(--accent-primary);
+  text-align: right;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  padding: 8px 0;
+  line-height: 1;
 }
-#lf-comprasTable tbody tr { transition: background 0.12s; }
-#lf-comprasTable tbody tr:active { background: var(--accent-glow); }
 
 /* ============================================================================
    SPARKLINE
    ============================================================================ */
-.lf-sparkline-wrapper { display: flex; flex-direction: column; align-items: stretch; gap: 2px; }
-.lf-sparkline { display: block; width: 100%; height: 18px; overflow: visible; }
+.lf-sparkline-wrapper { display: flex; flex-direction: column; align-items: stretch; gap: 2px; margin-top: 5px; }
+.lf-sparkline { display: block; width: 100%; height: 16px; overflow: visible; }
 .lf-sparkline-trend { font-size: 9px; font-weight: 700; text-align: right; padding-right: 2px; letter-spacing: 0.2px; }
 .lf-trend-up   { color: var(--btn-red); }
 .lf-trend-down { color: var(--btn-green); }
