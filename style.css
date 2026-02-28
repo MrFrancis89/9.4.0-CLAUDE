@@ -1297,13 +1297,14 @@ body.theme-arctic #lf-comprasTable td, body.light-mode #lf-comprasTable td { bor
   display: block; width: 100%; box-sizing: border-box;
   background: transparent; border: 1.5px solid transparent; border-radius: 8px;
   padding: 8px 7px; font-size: 13px; font-weight: 400; color: var(--text);
-  outline: none; font-family: inherit; overflow: hidden;
-  text-overflow: ellipsis; white-space: nowrap;
+  outline: none; font-family: inherit;
+  /* CORREÇÃO: permite quebra de linha em nomes longos */
+  white-space: normal; overflow: visible; word-break: break-word; overflow-wrap: break-word;
   transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
 }
 .lf-nome-editavel:focus {
   border-color: var(--accent-primary); background: var(--surface-3);
-  box-shadow: 0 0 0 3px var(--accent-glow); white-space: normal; overflow: visible;
+  box-shadow: 0 0 0 3px var(--accent-glow);
 }
 .lf-preco-input {
   display: block; width: 100%; box-sizing: border-box;
