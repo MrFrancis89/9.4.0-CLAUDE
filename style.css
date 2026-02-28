@@ -1259,7 +1259,8 @@ body.theme-arctic .lf-produto-card, body.light-mode .lf-produto-card { backgroun
 /* ============================================================================
    TABELA LISTA FÁCIL
    ============================================================================ */
-/* ── Lista Fácil: wrapper da tabela ────────────────────────────────────────── */
+
+/* ── Wrapper da tabela (glass card, igual ao restante do app) ─────────────── */
 #listafacil-section .lf-table-wrapper {
   position: relative;
   border-radius: var(--radius-md);
@@ -1269,44 +1270,45 @@ body.theme-arctic .lf-produto-card, body.light-mode .lf-produto-card { backgroun
   -webkit-backdrop-filter: blur(var(--glass-blur));
   box-shadow: var(--glass-shadow), var(--inner-glow);
   margin-bottom: 12px;
-  overflow: hidden; /* sem scroll horizontal — card ocupa 100% */
+  overflow: hidden;
 }
 
-/* Tabela sem layout fixo, sem cabeçalho, sem colunas */
+/* ── Tabela ─────────────────────────────────────────────────────────────────── */
 #lf-comprasTable {
   width: 100%;
   border-collapse: collapse;
-  table-layout: auto;
+  table-layout: fixed; /* garante que as colunas não estourem */
 }
 
-/* Linha = card completo */
+/* ── Linha = card com separador ──────────────────────────────────────────────── */
 #lf-comprasTable tbody tr.lf-item-row {
   display: block;
   border-bottom: 1px solid var(--glass-border);
   transition: background 0.12s;
-  will-change: transform; /* suaviza o swipe */
+  will-change: transform;
 }
 #lf-comprasTable tbody tr.lf-item-row:last-child { border-bottom: none; }
-#lf-comprasTable tbody tr.lf-item-row:active { background: var(--accent-glow); }
+#lf-comprasTable tbody tr.lf-item-row:active { background: rgba(10,132,255,0.06); }
 
-/* Célula única que ocupa a linha inteira */
+/* ── Célula única full-width ─────────────────────────────────────────────────── */
 .lf-item-cell {
   display: block;
   width: 100%;
   padding: 0;
-  overflow: hidden; /* contém o swipe */
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
-/* Card interno: nome + controles */
+/* ── Card interno: organiza nome + controles em coluna ────────────────────────── */
 .lf-item-card {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  padding: 10px 12px 10px;
+  gap: 10px;
+  padding: 14px 14px 12px;
   box-sizing: border-box;
 }
 
-/* ── Nome (input full-width) ─────────────────────────────────────────────── */
+/* ── Nome: input full-width com quebra de linha garantida ────────────────────── */
 .lf-nome-editavel {
   display: block;
   width: 100%;
@@ -1315,31 +1317,38 @@ body.theme-arctic .lf-produto-card, body.light-mode .lf-produto-card { backgroun
   border: none;
   border-bottom: 1px solid var(--border);
   border-radius: 0;
-  padding: 0 0 6px;
-  font-size: 14px;
-  font-weight: 500;
+  padding: 0 0 7px;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--text);
   outline: none;
   font-family: inherit;
+  /* quebra de linha — texto longo NÃO extrapola o card */
   white-space: normal;
-  overflow: visible;
   word-break: break-word;
   overflow-wrap: break-word;
-  margin-bottom: 10px;
+  overflow: visible;
   transition: border-color 0.2s;
+  /* reseta herança do input global que força padding/font-size grandes */
+  padding-top: 0;
 }
 .lf-nome-editavel:focus {
   border-bottom-color: var(--accent-primary);
+  box-shadow: none; /* sem glow azul no nome — só sublinhado */
 }
 
-/* ── Linha de controles: Preço | Qtd | Total ─────────────────────────────── */
+/* ── Linha de controles: Preço | Qtd | Total ──────────────────────────────────
+   Usa flex-wrap para garantir quebra automática em telas estreitas.
+   Em telas normais (≥320px) os três campos cabem numa linha.
+   ─────────────────────────────────────────────────────────────────────────── */
 .lf-item-footer {
   display: flex;
+  flex-wrap: wrap;           /* quebra quando não há espaço */
   align-items: flex-end;
-  gap: 8px;
+  gap: 8px 10px;             /* row-gap column-gap */
 }
 
-/* Campo genérico (preço, qtd, total) */
+/* ── Campo genérico (preço, qtd, total) ──────────────────────────────────────── */
 .lf-item-field {
   display: flex;
   flex-direction: column;
@@ -1347,22 +1356,36 @@ body.theme-arctic .lf-produto-card, body.light-mode .lf-produto-card { backgroun
   min-width: 0;
 }
 
-.lf-field-preco { flex: 2; min-width: 80px; }
-.lf-field-qtd   { flex: 1; min-width: 52px; max-width: 80px; }
-.lf-field-total { flex: 1.5; min-width: 72px; align-items: flex-end; }
+/* Proporções: Preço ocupa mais espaço, Qtd é compacto, Total alinha à direita */
+.lf-field-preco {
+  flex: 2 1 90px;   /* cresce, encolhe, base 90px */
+  min-width: 80px;
+}
+.lf-field-qtd {
+  flex: 1 1 60px;
+  min-width: 54px;
+  max-width: 90px;
+}
+.lf-field-total {
+  flex: 1 1 80px;
+  min-width: 70px;
+  align-items: flex-end;
+}
 
-/* Label acima do campo */
+/* ── Label acima do campo (estilo consistente com categorias do estoque) ──────── */
 .lf-field-label {
   display: block;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.7px;
   color: var(--text-muted);
   white-space: nowrap;
 }
 
-/* ── Input de Preço ──────────────────────────────────────────────────────── */
+/* ── Input de Preço ────────────────────────────────────────────────────────────
+   Aparência idêntica ao .input-qtd-tabela do estoque.
+   ─────────────────────────────────────────────────────────────────────────── */
 .lf-preco-input {
   display: block;
   width: 100%;
@@ -1370,9 +1393,9 @@ body.theme-arctic .lf-produto-card, body.light-mode .lf-produto-card { backgroun
   background: var(--surface-2);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-xs);
-  padding: 8px 10px;
+  padding: 9px 10px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text);
   outline: none;
   text-align: right;
@@ -1388,10 +1411,12 @@ body.light-mode   .lf-preco-input { background: var(--surface-2); }
 .lf-preco-input:active {
   background: var(--accent-glow);
   border-color: var(--accent-primary);
-  box-shadow: var(--inner-glow-active);
+  box-shadow: 0 0 0 3px var(--accent-glow), var(--inner-glow-active);
 }
 
-/* ── Input de Quantidade ─────────────────────────────────────────────────── */
+/* ── Input de Quantidade ───────────────────────────────────────────────────────
+   Mesmos tokens visuais do .input-qtd-tabela.
+   ─────────────────────────────────────────────────────────────────────────── */
 .lf-qtd-input {
   display: block;
   width: 100%;
@@ -1399,7 +1424,7 @@ body.light-mode   .lf-preco-input { background: var(--surface-2); }
   background: var(--surface-2);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-xs);
-  padding: 8px 6px;
+  padding: 9px 6px;
   font-size: 14px;
   font-weight: 700;
   color: var(--text);
@@ -1414,10 +1439,10 @@ body.light-mode   .lf-qtd-input { background: var(--surface-2); }
 .lf-qtd-input:focus {
   border-color: var(--accent-primary);
   background: var(--surface-3);
-  box-shadow: 0 0 0 3px var(--accent-glow);
+  box-shadow: 0 0 0 3px var(--accent-glow), var(--inner-glow-active);
 }
 
-/* ── Coluna Total ────────────────────────────────────────────────────────── */
+/* ── Total: valor destacado em accent-primary ─────────────────────────────────── */
 .lf-total-cell {
   display: block;
   font-weight: 700;
@@ -1426,7 +1451,7 @@ body.light-mode   .lf-qtd-input { background: var(--surface-2); }
   font-size: 14px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  padding: 8px 0;
+  padding: 9px 0;           /* alinha verticalmente com os inputs */
   line-height: 1;
 }
 
