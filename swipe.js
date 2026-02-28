@@ -7,9 +7,12 @@ import { mostrarToast } from './toast.js';
 import { atualizarPainelCompras } from './compras.js';
 
 let swipeStartX = 0, swipeStartY = 0, swipeCurrentX = 0;
-let isSwiping = false, swipedRow = null, justSwiped = false;
+let isSwiping = false, isScrolling = false, swipedRow = null, justSwiped = false;
 const swipeBg = document.getElementById("swipe-bg");
 const swipeWidth = 160;
+
+const DIRECTION_THRESHOLD = 8;
+const SWIPE_THRESHOLD     = 20;
 
 export function initSwipe() {
     const container = document.getElementById("lista-itens-container");
@@ -21,11 +24,12 @@ export function initSwipe() {
         if (!tr || tr.classList.contains('categoria-header-row')) return;
         if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox') return;
         if (swipedRow && swipedRow !== tr) closeSwipe(swipedRow);
-        
-        swipeStartX = getClientX(e);
-        swipeStartY = getClientY(e);
-        isSwiping = false;
-        justSwiped = false;
+
+        swipeStartX  = getClientX(e);
+        swipeStartY  = getClientY(e);
+        isSwiping    = false;
+        isScrolling  = false;
+        justSwiped   = false;
         swipeCurrentX = (swipedRow === tr) ? -swipeWidth : 0;
         tr.style.transition = 'none';
     }, { passive: true });
@@ -33,11 +37,19 @@ export function initSwipe() {
     container.addEventListener('touchmove', function(e) {
         let tr = e.target.closest('tr');
         if (!tr || tr.classList.contains('categoria-header-row')) return;
-        let deltaX = getClientX(e) - swipeStartX;
-        let deltaY = getClientY(e) - swipeStartY;
-        if (!isSwiping && Math.abs(deltaX) > 15 && Math.abs(deltaX) > Math.abs(deltaY)) {
-            isSwiping = true;
+        const deltaX = getClientX(e) - swipeStartX;
+        const deltaY = getClientY(e) - swipeStartY;
+        const absDx  = Math.abs(deltaX);
+        const absDy  = Math.abs(deltaY);
+
+        if (!isSwiping && !isScrolling) {
+            if (absDx < DIRECTION_THRESHOLD && absDy < DIRECTION_THRESHOLD) return;
+            if (absDy >= absDx) { isScrolling = true; return; }
+            if (absDx >= SWIPE_THRESHOLD) { isSwiping = true; }
         }
+
+        if (isScrolling) return;
+
         if (isSwiping) {
             if (e.cancelable) e.preventDefault();
             if (document.activeElement) document.activeElement.blur();
